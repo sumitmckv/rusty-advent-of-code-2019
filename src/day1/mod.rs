@@ -3,7 +3,7 @@ use std::io::BufReader;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
-pub fn day11() -> std::io::Result<()> {
+pub fn day1a() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day1/input.txt").canonicalize()?;
     let file = File::open(input_file)?;
     let buf_reader = BufReader::new(file);
@@ -14,11 +14,11 @@ pub fn day11() -> std::io::Result<()> {
         let input_num: u64 = input.parse().unwrap();
         result += ((input_num / 3) as u32) - 2;
     }
-    println!("Result of day11 is {}", result);
+    println!("Result of day1a is {}", result);
     Ok(())
 }
 
-pub fn day12() -> std::io::Result<()> {
+pub fn day1b() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day1/input.txt").canonicalize()?;
     let file = File::open(input_file)?;
     let buf_reader = BufReader::new(file);
@@ -37,6 +37,6 @@ pub fn day12() -> std::io::Result<()> {
             }
         }
     }
-    println!("Result of day12 is {}", result);
+    println!("Result of day1b is {}", result);
     Ok(())
 }
