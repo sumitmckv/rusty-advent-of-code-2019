@@ -1,10 +1,10 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::io::prelude::*;
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::path::PathBuf;
 
-pub fn day3() -> std::io::Result<()>  {
+pub fn day3() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day3/input.txt").canonicalize()?;
     let file = File::open(input_file)?;
     let mut buf_reader = BufReader::new(file);
@@ -20,12 +20,12 @@ pub fn day3() -> std::io::Result<()>  {
     for (points, num_steps1) in wire1_visited.iter() {
         match wire2_visited.get(points) {
             Some(num_steps2) => {
-                let (x,y) = points;
+                let (x, y) = points;
                 let sum = x.abs() + y.abs();
                 let step_sum = num_steps1 + num_steps2;
-                distance = if sum < distance {sum} else {distance};
-                min_steps = if step_sum < min_steps {step_sum} else {min_steps};
-            },
+                distance = if sum < distance { sum } else { distance };
+                min_steps = if step_sum < min_steps { step_sum } else { min_steps };
+            }
             None => {}
         }
     }
@@ -41,7 +41,9 @@ fn visited_map(paths: Vec<String>) -> HashMap<(isize, isize), usize> {
     let mut num_steps = 0;
     for path in paths {
         let direction = path.chars().next().unwrap();
-        let steps: usize = String::from(&path[1..]).parse().expect("Expecting number!!");
+        let steps: usize = String::from(&path[1..])
+            .parse()
+            .expect("Expecting number!!");
 
         match direction {
             'R' => {
@@ -50,21 +52,21 @@ fn visited_map(paths: Vec<String>) -> HashMap<(isize, isize), usize> {
                     num_steps += 1;
                     visited.insert((last_x, last_y), num_steps);
                 }
-            },
+            }
             'L' => {
                 for _ in 0..steps {
                     last_x -= 1;
                     num_steps += 1;
                     visited.insert((last_x, last_y), num_steps);
                 }
-            },
+            }
             'U' => {
                 for _ in 0..steps {
                     last_y += 1;
                     num_steps += 1;
                     visited.insert((last_x, last_y), num_steps);
                 }
-            },
+            }
             'D' => {
                 for _ in 0..steps {
                     last_y -= 1;
@@ -72,8 +74,8 @@ fn visited_map(paths: Vec<String>) -> HashMap<(isize, isize), usize> {
                     visited.insert((last_x, last_y), num_steps);
                 }
             }
-            _ => panic!("Wrnog input!!")
+            _ => panic!("Wrnog input!!"),
         }
     }
-    visited 
+    visited
 }

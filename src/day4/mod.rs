@@ -1,15 +1,19 @@
 pub fn day4a() {
-    let mut possible_passwords : u32 = 0;
+    let mut possible_passwords: u32 = 0;
     let range = 109165..576723;
 
     for number in range {
-        let digits: Vec<u32> = number.to_string().chars().map(|d| d.to_digit(10).unwrap()).collect();
+        let digits: Vec<u32> = number
+            .to_string()
+            .chars()
+            .map(|d| d.to_digit(10).unwrap())
+            .collect();
         if is_decreasing(digits.clone()) {
-            continue
+            continue;
         }
 
         if !has_adjacent_digit(digits) {
-            continue
+            continue;
         }
         possible_passwords += 1;
     }
@@ -17,26 +21,30 @@ pub fn day4a() {
 }
 
 pub fn day4b() {
-    let mut possible_passwords : u32 = 0;
+    let mut possible_passwords: u32 = 0;
     let range = 109165..576723;
 
     for number in range {
-        let digits: Vec<u32> = number.to_string().chars().map(|d| d.to_digit(10).unwrap()).collect();
+        let digits: Vec<u32> = number
+            .to_string()
+            .chars()
+            .map(|d| d.to_digit(10).unwrap())
+            .collect();
         if is_decreasing(digits.clone()) {
-            continue
+            continue;
         }
 
         if !has_adjacent_digit_of_two(digits) {
-            continue
+            continue;
         }
         possible_passwords += 1;
     }
     println!("Result of day4b is {}", possible_passwords);
 }
 
-fn is_decreasing (digits: Vec<u32>) -> bool {
+fn is_decreasing(digits: Vec<u32>) -> bool {
     let mut prev: u32 = 0;
-    
+
     for digit in digits {
         if digit < prev {
             return true;
@@ -46,9 +54,9 @@ fn is_decreasing (digits: Vec<u32>) -> bool {
     false
 }
 
-fn has_adjacent_digit (digits: Vec<u32>) -> bool {
+fn has_adjacent_digit(digits: Vec<u32>) -> bool {
     let mut prev: u32 = 0;
-    
+
     for digit in digits {
         if digit == prev {
             return true;
@@ -58,7 +66,7 @@ fn has_adjacent_digit (digits: Vec<u32>) -> bool {
     false
 }
 
-fn has_adjacent_digit_of_two (digits: Vec<u32>) -> bool {
+fn has_adjacent_digit_of_two(digits: Vec<u32>) -> bool {
     let mut adjacent_vec: Vec<u32> = Vec::new();
 
     for digit in digits {

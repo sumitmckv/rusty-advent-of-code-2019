@@ -1,6 +1,6 @@
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::PathBuf;
 
 pub fn day1a() -> std::io::Result<()> {
@@ -27,10 +27,10 @@ pub fn day1b() -> std::io::Result<()> {
     for input in inputs {
         let input = input.expect("Unable to read line");
         let input_num: u64 = input.parse().unwrap();
-        let mut value = (input_num / 3) as u32 -2;
+        let mut value = (input_num / 3) as u32 - 2;
         result += value;
         while value > 0 {
-            value = (value /3 ) as u32;
+            value = (value / 3) as u32;
             if value > 2 {
                 value -= 2;
                 result += value;

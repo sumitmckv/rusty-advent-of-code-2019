@@ -1,8 +1,8 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::io::prelude::*;
-use std::path::PathBuf;
 use crate::lib::intcode_computer;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::path::PathBuf;
 
 pub fn day2a() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day2/input.txt").canonicalize()?;
@@ -10,7 +10,10 @@ pub fn day2a() -> std::io::Result<()> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
-    let mut instructions: Vec<isize> = contents.split(",").map(|num| num.parse().unwrap()).collect();
+    let mut instructions: Vec<isize> = contents
+        .split(",")
+        .map(|num| num.parse().unwrap())
+        .collect();
     instructions[1] = 12;
     instructions[2] = 2;
     let diagnostic_output = intcode_computer(instructions, 2, 1);
@@ -24,7 +27,10 @@ pub fn day2b() -> std::io::Result<()> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
-    let input_vec: Vec<isize> = contents.split(",").map(|num| num.parse().unwrap()).collect();
+    let input_vec: Vec<isize> = contents
+        .split(",")
+        .map(|num| num.parse().unwrap())
+        .collect();
     let target: isize = 19690720;
     let mut terminate: bool = false;
     for noun in 0..99 {
@@ -36,12 +42,12 @@ pub fn day2b() -> std::io::Result<()> {
             if target == diagnostic_output {
                 println!("Result of day2b is {}", 100 * noun + verb);
                 terminate = true;
-                break
+                break;
             }
         }
         if terminate == true {
-            break
-        } 
+            break;
+        }
     }
     Ok(())
 }
