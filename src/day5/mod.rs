@@ -10,7 +10,8 @@ pub fn day5a() -> std::io::Result<()> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
-    let diagnostic_output = intcode_computer(contents, 5, 1);
+    let instructions: Vec<isize> = contents.split(",").map(|num| num.parse().unwrap()).collect();
+    let diagnostic_output = intcode_computer(instructions, 5, 1);
     print!("Result of day5a is {}\n", diagnostic_output);
     Ok(())
 }
@@ -21,7 +22,8 @@ pub fn day5b() -> std::io::Result<()> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents)?;
-    let diagnostic_output = intcode_computer(contents, 5, 5);
+    let instructions: Vec<isize> = contents.split(",").map(|num| num.parse().unwrap()).collect();
+    let diagnostic_output = intcode_computer(instructions, 5, 5);
     print!("Result of day5b is {}\n", diagnostic_output);
     Ok(())
 }
