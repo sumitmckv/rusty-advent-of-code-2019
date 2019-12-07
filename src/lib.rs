@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 pub fn intcode_computer(mut instructions: Vec<isize>, day: usize, input: isize) -> isize {
     let mut instruction_pointer = 0;
     let mut diagnostic_output = 0;
@@ -72,19 +73,15 @@ fn intcode_parser(instruction: isize, day: usize) -> (usize, usize, usize, usize
     let mut cur_index = 0;
     while cur_index < instructions.len() {
         let ins = instructions[cur_index];
-        if cur_index == 0 {
-            if '9' == ins {
-                op = 99;
-            } else {
+        match cur_index {
+            0 => {
                 op = ins.to_digit(10).unwrap() as usize;
+                op = if 9 == op { 99 } else { op };
+                cur_index = if instructions.len() > 1 { 1 } else { 0 };
             }
-            if instructions.len() > 1 {
-                cur_index += 1;
-            }
-        } else if cur_index == 2 {
-            mode1 = ins.to_digit(10).unwrap() as usize;
-        } else if cur_index == 3 {
-            mode2 = ins.to_digit(10).unwrap() as usize;
+            2 => mode1 = ins.to_digit(10).unwrap() as usize,
+            3 => mode2 = ins.to_digit(10).unwrap() as usize,
+            _ => println!("Unexpected index received"),
         }
         cur_index += 1;
     }

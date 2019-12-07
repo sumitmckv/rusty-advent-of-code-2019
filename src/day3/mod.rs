@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::PathBuf;
 
+#[rustfmt::skip]
 pub fn day3() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day3/input.txt").canonicalize()?;
     let file = File::open(input_file)?;
