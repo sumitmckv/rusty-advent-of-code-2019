@@ -15,7 +15,7 @@ pub fn day5a() -> std::io::Result<()> {
         .map(|num| num.parse().unwrap())
         .collect();
     let diagnostic_output = intcode_computer(instructions, 5, 1);
-    print!("Result of day5a is {}\n", diagnostic_output);
+    println!("Result of day5a is {}", diagnostic_output);
     Ok(())
 }
 
@@ -30,6 +30,6 @@ pub fn day5b() -> std::io::Result<()> {
         .map(|num| num.parse().unwrap())
         .collect();
     let diagnostic_output = intcode_computer(instructions, 5, 5);
-    print!("Result of day5b is {}\n", diagnostic_output);
+    println!("Result of day5b is {}", diagnostic_output);
     Ok(())
 }
