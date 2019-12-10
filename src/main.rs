@@ -4,6 +4,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 mod lib;
 
 fn main() -> std::io::Result<()> {
@@ -17,5 +18,7 @@ fn main() -> std::io::Result<()> {
     day5::day5a()?;
     day5::day5b()?;
     day6::day6();
+    day7::day7a();
+    day7::day7b();
     Ok(())
 }

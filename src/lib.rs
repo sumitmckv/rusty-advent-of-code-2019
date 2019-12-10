@@ -1,92 +1,185 @@
-#[rustfmt::skip]
-pub fn intcode_computer(mut instructions: Vec<isize>, day: usize, input: isize) -> isize {
-    let mut instruction_pointer = 0;
-    let mut diagnostic_output = 0;
-    while instruction_pointer < instructions.len() - 2 {
-        let (op, mode1, mode2, _mode3) = intcode_parser(instructions[instruction_pointer], day);
-        let param1 = instructions[instruction_pointer + 1];
-        let param2 = instructions[instruction_pointer + 2];
-        let param3 = instructions[instruction_pointer + 3];
-        match op {
-            99 => break,
-            1 => { // addition
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instructions[param3 as usize] = val1 + val2;
-                instruction_pointer += 4;
-            }
-            2 => { // multiplication
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instructions[param3 as usize] = val1 * val2;
-                instruction_pointer += 4;
-            }
-            3 => { // input
-                instructions[param1 as usize] = input;
-                instruction_pointer += 2;
-            }
-            4 => { // output
-                let val = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                if val != 0 {
-                    diagnostic_output = val;
-                }
-                instruction_pointer += 2;
-            }
-            5 => { // jump-if-true
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instruction_pointer = if val1 != 0 { val2 as usize } else { instruction_pointer + 3 };
-            }
-            6 => { // jump-if-false
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instruction_pointer = if val1 == 0 { val2 as usize } else { instruction_pointer + 3 };
-            }
-            7 => { // less than
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instructions[param3 as usize] = if val1 < val2 { 1 } else { 0 };
-                instruction_pointer += 4;
-            }
-            8 => { // equals
-                let val1 = if mode1 == 0 { instructions[param1 as usize] } else { param1 };
-                let val2 = if mode2 == 0 { instructions[param2 as usize] } else { param2 };
-                instructions[param3 as usize] = if val1 == val2 { 1 } else { 0 };
-                instruction_pointer += 4;
-            }
-            _ => println!("something went wrong"),
-        }
-    }
-    if day == 2 {
-        return instructions[0];
-    }
-    return diagnostic_output;
+use std::collections::{HashMap, VecDeque};
+use std::convert::{TryFrom, TryInto};
+
+#[derive(Debug)]
+pub enum Mode {
+    Position,
+    Immediate,
 }
 
-fn intcode_parser(instruction: isize, day: usize) -> (usize, usize, usize, usize) {
-    let mut instructions: Vec<char> = instruction.to_string().chars().map(|d| d).collect();
-    instructions.reverse();
-    let mut op: usize = 0;
-    let mut mode1: usize = 0;
-    let mut mode2: usize = 0;
-    let mode3: usize = 0;
-    let mut cur_index = 0;
-    while cur_index < instructions.len() {
-        let ins = instructions[cur_index];
-        match cur_index {
-            0 => {
-                op = ins.to_digit(10).unwrap() as usize;
-                op = if 9 == op { 99 } else { op };
-                cur_index = if instructions.len() > 1 { 1 } else { 0 };
-            }
-            2 => mode1 = ins.to_digit(10).unwrap() as usize,
-            3 => mode2 = ins.to_digit(10).unwrap() as usize,
-            _ => println!("Unexpected index received"),
+#[derive(Debug)]
+pub enum Intcode {
+    Add(Mode, Mode, Mode),
+    Mult(Mode, Mode, Mode),
+    In(Mode),
+    Out(Mode),
+    Jit(Mode, Mode),
+    Jif(Mode, Mode),
+    Lt(Mode, Mode, Mode),
+    Eq(Mode, Mode, Mode),
+    Halt,
+}
+
+#[derive(Debug)]
+pub enum ErrorIntcode {
+    InvalidOpcode,
+    InvalidMode,
+}
+
+impl TryFrom<isize> for Mode {
+    type Error = ErrorIntcode;
+
+    fn try_from(value: isize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Mode::Position),
+            1 => Ok(Mode::Immediate),
+            _ => Err(ErrorIntcode::InvalidMode),
         }
-        cur_index += 1;
     }
-    if day == 2 {
-        return (op, 0, 0, 0);
+}
+
+impl TryFrom<isize> for Intcode {
+    type Error = ErrorIntcode;
+
+    fn try_from(value: isize) -> Result<Self, Self::Error> {
+        let m1: Mode = ((value / 100) % 10).try_into()?;
+        let m2: Mode = ((value / 1000) % 10).try_into()?;
+        let m3: Mode = ((value / 10000) % 10).try_into()?;
+
+        match value % 100 {
+            1 => Ok(Intcode::Add(m1, m2, m3)),
+            2 => Ok(Intcode::Mult(m1, m2, m3)),
+            3 => Ok(Intcode::In(m1)),
+            4 => Ok(Intcode::Out(m1)),
+            5 => Ok(Intcode::Jit(m1, m2)),
+            6 => Ok(Intcode::Jif(m1, m2)),
+            7 => Ok(Intcode::Lt(m1, m2, m3)),
+            8 => Ok(Intcode::Eq(m1, m2, m3)),
+            99 => Ok(Intcode::Halt),
+            _ => Err(ErrorIntcode::InvalidOpcode),
+        }
     }
-    (op, mode1, mode2, mode3)
+}
+
+#[derive(Debug)]
+pub struct Computer {
+    memory: HashMap<usize, isize>, // intcode instructions
+    ptr: usize,                    // instruction pointer
+    inputs: VecDeque<isize>,       // input buffer
+    output: isize,                 // output buffer
+    halted: bool,                  // indicates if program halted
+}
+
+impl Computer {
+    pub fn new() -> Computer {
+        Computer {
+            memory: HashMap::new(),
+            ptr: 0,
+            inputs: VecDeque::new(),
+            output: 0,
+            halted: false,
+        }
+    }
+
+    pub fn init(&mut self, input_txt: &str) {
+        let arr: Vec<isize> = input_txt
+            .split(",")
+            .map(|a| a.parse::<isize>().unwrap())
+            .collect();
+        for loc in 0..arr.len() {
+            self.memory.insert(loc, arr[loc]);
+        }
+    }
+
+    pub fn get(&self, addr: usize, m: Mode) -> isize {
+        match m {
+            Mode::Position => self.read(self.read(addr) as usize),
+            Mode::Immediate => self.read(addr),
+        }
+    }
+
+    pub fn set(&mut self, addr: usize, val: isize, m: Mode) {
+        match m {
+            Mode::Position => *self.memory.entry(self.read(addr) as usize).or_insert(val) = val,
+            Mode::Immediate => *self.memory.entry(addr).or_insert(val) = val,
+        }
+    }
+
+    pub fn read(&self, addr: usize) -> isize {
+        *self.memory.get(&addr).unwrap()
+    }
+
+    pub fn write(&mut self, input: isize) {
+        self.inputs.push_front(input);
+    }
+
+    pub fn get_output(&self) -> isize {
+        self.output
+    }
+
+    pub fn is_halted(&self) -> bool {
+        self.halted
+    }
+
+    pub fn execute(&mut self) {
+        loop {
+            let op: Intcode = self.read(self.ptr).try_into().unwrap();
+            match op {
+                Intcode::Add(m1, m2, m3) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    self.set(self.ptr + 3, p_a + p_b, m3);
+                    self.ptr += 4;
+                }
+                Intcode::Mult(m1, m2, m3) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    self.set(self.ptr + 3, p_a * p_b, m3);
+                    self.ptr += 4;
+                }
+                Intcode::In(m1) => {
+                    match self.inputs.pop_back() {
+                        Some(val) => self.set(self.ptr + 1, val, m1),
+                        None => {
+                            self.halted = false;
+                            break;
+                        }
+                    }
+                    self.ptr += 2;
+                }
+                Intcode::Out(m1) => {
+                    self.output = self.get(self.ptr + 1, m1);
+                    self.ptr += 2;
+                }
+                Intcode::Jit(m1, m2) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    if p_a != 0 {
+                        self.ptr = p_b as usize;
+                    } else {
+                        self.ptr += 3;
+                    }
+                }
+                Intcode::Jif(m1, m2) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    if p_a == 0 {
+                        self.ptr = p_b as usize;
+                    } else {
+                        self.ptr += 3;
+                    }
+                }
+                Intcode::Lt(m1, m2, m3) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    self.set(self.ptr + 3, (p_a < p_b) as isize, m3);
+                    self.ptr += 4;
+                }
+                Intcode::Eq(m1, m2, m3) => {
+                    let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
+                    self.set(self.ptr + 3, (p_a == p_b) as isize, m3);
+                    self.ptr += 4;
+                }
+                Intcode::Halt => {
+                    self.halted = true;
+                    break;
+                }
+            }
+        }
+    }
 }

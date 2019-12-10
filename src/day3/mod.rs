@@ -4,7 +4,6 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-#[rustfmt::skip]
 pub fn day3() -> std::io::Result<()> {
     let input_file = PathBuf::from("./src/day3/input.txt").canonicalize()?;
     let file = File::open(input_file)?;
@@ -24,8 +23,12 @@ pub fn day3() -> std::io::Result<()> {
                 let (x, y) = points;
                 let sum = x.abs() + y.abs();
                 let step_sum = num_steps1 + num_steps2;
-                distance = if sum < distance { sum } else { distance };
-                min_steps = if step_sum < min_steps { step_sum } else { min_steps };
+                if sum < distance {
+                    distance = sum
+                }
+                if step_sum < min_steps {
+                    min_steps = step_sum
+                }
             }
             None => {}
         }
