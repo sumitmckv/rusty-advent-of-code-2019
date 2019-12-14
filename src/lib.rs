@@ -5,6 +5,7 @@ use std::convert::{TryFrom, TryInto};
 pub enum Mode {
     Position,
     Immediate,
+    Relative,
 }
 
 #[derive(Debug)]
@@ -17,6 +18,7 @@ pub enum Intcode {
     Jif(Mode, Mode),
     Lt(Mode, Mode, Mode),
     Eq(Mode, Mode, Mode),
+    Rel(Mode),
     Halt,
 }
 
@@ -33,6 +35,7 @@ impl TryFrom<isize> for Mode {
         match value {
             0 => Ok(Mode::Position),
             1 => Ok(Mode::Immediate),
+            2 => Ok(Mode::Relative),
             _ => Err(ErrorIntcode::InvalidMode),
         }
     }
@@ -55,6 +58,7 @@ impl TryFrom<isize> for Intcode {
             6 => Ok(Intcode::Jif(m1, m2)),
             7 => Ok(Intcode::Lt(m1, m2, m3)),
             8 => Ok(Intcode::Eq(m1, m2, m3)),
+            9 => Ok(Intcode::Rel(m1)),
             99 => Ok(Intcode::Halt),
             _ => Err(ErrorIntcode::InvalidOpcode),
         }
@@ -68,6 +72,7 @@ pub struct Computer {
     inputs: VecDeque<isize>,       // input buffer
     output: isize,                 // output buffer
     halted: bool,                  // indicates if program halted
+    rel_base: usize,               // relative base index for Relative Mode
 }
 
 impl Computer {
@@ -78,6 +83,7 @@ impl Computer {
             inputs: VecDeque::new(),
             output: 0,
             halted: false,
+            rel_base: 0,
         }
     }
 
@@ -95,6 +101,7 @@ impl Computer {
         match m {
             Mode::Position => self.read(self.read(addr) as usize),
             Mode::Immediate => self.read(addr),
+            Mode::Relative => self.read(self.rel_base_val(addr) as usize),
         }
     }
 
@@ -102,11 +109,18 @@ impl Computer {
         match m {
             Mode::Position => *self.memory.entry(self.read(addr) as usize).or_insert(val) = val,
             Mode::Immediate => *self.memory.entry(addr).or_insert(val) = val,
+            Mode::Relative => {
+                let real_addr = self.rel_base_val(addr) as usize;
+                *self.memory.entry(real_addr).or_insert(val) = val
+            }
         }
     }
 
     pub fn read(&self, addr: usize) -> isize {
-        *self.memory.get(&addr).unwrap()
+        match self.memory.get(&addr) {
+            Some(val) => *val,
+            None => 0,
+        }
     }
 
     pub fn write(&mut self, input: isize) {
@@ -119,6 +133,10 @@ impl Computer {
 
     pub fn is_halted(&self) -> bool {
         self.halted
+    }
+
+    fn rel_base_val(&self, addr: usize) -> isize {
+        self.rel_base as isize + self.read(addr)
     }
 
     pub fn execute(&mut self) {
@@ -174,6 +192,10 @@ impl Computer {
                     let (p_a, p_b) = (self.get(self.ptr + 1, m1), self.get(self.ptr + 2, m2));
                     self.set(self.ptr + 3, (p_a == p_b) as isize, m3);
                     self.ptr += 4;
+                }
+                Intcode::Rel(m1) => {
+                    self.rel_base = (self.rel_base as isize + self.get(self.ptr + 1, m1)) as usize;
+                    self.ptr += 2;
                 }
                 Intcode::Halt => {
                     self.halted = true;
